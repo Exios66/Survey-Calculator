@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Survey Calculator</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
     <style>
         :root {
             --background-light: #f5f5f5;
@@ -215,6 +216,100 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 6px var(--shadow-light);
         }
+
+        .debug-console {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 200px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 1rem;
+            display: none;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .debug-toggle {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            z-index: 1001;
+        }
+
+        .chart-container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .dark-mode .chart-container {
+            background: #2a2a2a;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background: var(--accent-light);
+            color: white;
+            display: none;
+            animation: slideIn 0.3s ease-out;
+            z-index: 1000;
+        }
+
+        .survey-section {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .dark-mode .survey-section {
+            background: #2a2a2a;
+        }
+
+        .question-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .checkbox-group, .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin: 0.5rem 0;
+        }
+
+        .likert-scale {
+            display: flex;
+            justify-content: space-between;
+            margin: 1rem 0;
+        }
+
+        .metrics-dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .metric-card {
+            padding: 1rem;
+            background: var(--background-light);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .dark-mode .metric-card {
+            background: var(--background-dark);
+        }
     </style>
 </head>
 <body>
@@ -228,44 +323,84 @@
     <nav>
         <button onclick="openTab('survey')" class="active">Take Survey</button>
         <button onclick="openTab('documentation')">Documentation</button>
+        <button onclick="openTab('analytics')">Analytics</button>
     </nav>
 
-    <div id="survey" class="tab-content active">
-        <h2>Chatbot Personality Survey</h2>
-        <p>Please rate your preferences for each interaction style (0-100):</p>
-        
-        <form id="survey-form" onsubmit="processSurvey(event)">
-            <div class="form-group">
-                <label for="metric_a">Supportive and Empathetic (Threshold: 70)</label>
-                <input type="number" id="metric_a" name="metric_a" min="0" max="100" required
-                       placeholder="Enter score 0-100">
-                <small>Focuses on emotional support and understanding</small>
+    <div id="survey" class="tab-content">
+        <h2>LLM Interaction Survey</h2>
+        <form id="llm-survey-form">
+            <!-- Section 1: General Impressions -->
+            <div class="survey-section">
+                <h3>General Impressions of Information Sources</h3>
+                
+                <div class="question-group">
+                    <label>What characteristics do you value most when evaluating information sources?</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" name="info_characteristics" value="accuracy"> Accuracy</label>
+                        <label><input type="checkbox" name="info_characteristics" value="objectivity"> Objectivity</label>
+                        <label><input type="checkbox" name="info_characteristics" value="relevance"> Relevance</label>
+                        <label><input type="checkbox" name="info_characteristics" value="clarity"> Clarity</label>
+                        <label><input type="checkbox" name="info_characteristics" value="authority"> Source authority</label>
+                        <label><input type="checkbox" name="info_characteristics" value="creativity"> Creativity</label>
+                        <label><input type="checkbox" name="info_characteristics" value="understanding"> Ease of understanding</label>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label>How often do you cross-check information?</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="cross_check_frequency" value="1"> Never</label>
+                        <label><input type="radio" name="cross_check_frequency" value="2"> Rarely</label>
+                        <label><input type="radio" name="cross_check_frequency" value="3"> Sometimes</label>
+                        <label><input type="radio" name="cross_check_frequency" value="4"> Often</label>
+                        <label><input type="radio" name="cross_check_frequency" value="5"> Always</label>
+                    </div>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label for="metric_b">Direct and Analytical (Threshold: 50)</label>
-                <input type="number" id="metric_b" name="metric_b" min="0" max="100" required
-                       placeholder="Enter score 0-100">
-                <small>Emphasizes logical problem-solving and clear communication</small>
+            <!-- Section 2: LLM Familiarity -->
+            <div class="survey-section">
+                <h3>LLM Familiarity and Usage</h3>
+                
+                <div class="question-group">
+                    <label>Have you used LLMs before?</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="llm_experience" value="yes"> Yes</label>
+                        <label><input type="radio" name="llm_experience" value="no"> No</label>
+                    </div>
+                </div>
+
+                <div class="question-group">
+                    <label>How familiar are you with LLMs?</label>
+                    <div class="likert-scale">
+                        <div class="likert-option">
+                            <input type="radio" name="llm_familiarity" value="1">
+                            <label>Not at all</label>
+                        </div>
+                        <div class="likert-option">
+                            <input type="radio" name="llm_familiarity" value="2">
+                            <label>Slightly</label>
+                        </div>
+                        <div class="likert-option">
+                            <input type="radio" name="llm_familiarity" value="3">
+                            <label>Moderately</label>
+                        </div>
+                        <div class="likert-option">
+                            <input type="radio" name="llm_familiarity" value="4">
+                            <label>Very</label>
+                        </div>
+                        <div class="likert-option">
+                            <input type="radio" name="llm_familiarity" value="5">
+                            <label>Extremely</label>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label for="metric_c">Playful and Casual (Threshold: 30)</label>
-                <input type="number" id="metric_c" name="metric_c" min="0" max="100" required
-                       placeholder="Enter score 0-100">
-                <small>Maintains a light, informal tone in interactions</small>
-            </div>
-
-            <button type="submit">Submit Survey</button>
+            <button type="button" onclick="processSurvey()" class="submit-button">Submit Survey</button>
         </form>
 
-        <div id="loading">
-            <div class="loading-spinner"></div>
-            <p>Processing your survey responses...</p>
-        </div>
-
-        <div id="survey-result"></div>
-        <div class="error-message"></div>
+        <div id="survey-results" class="metrics-dashboard"></div>
     </div>
 
     <div id="documentation" class="tab-content">
@@ -299,6 +434,22 @@
         </div>
     </div>
 
+    <div id="analytics" class="tab-content">
+        <h2>Survey Analytics</h2>
+        <div class="chart-container">
+            <canvas id="metricsChart"></canvas>
+        </div>
+    </div>
+
+    <div class="debug-console" id="debugConsole">
+        <h3>Debug Console</h3>
+        <div id="debugLogs"></div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+
+    <button class="debug-toggle" onclick="toggleDebugConsole()">🐛</button>
+
     <script>
         function openTab(tabName) {
             const tabs = document.querySelectorAll('.tab-content');
@@ -317,74 +468,50 @@
             themeToggleBtn.innerHTML = document.body.classList.contains('dark-mode') ? '&#9790;&#xFE0F;' : '&#9728;&#xFE0F;';
         }
 
-        async function processSurvey(event) {
-            event.preventDefault();
-            
-            const loadingDiv = document.getElementById('loading');
-            const resultDiv = document.getElementById('survey-result');
-            const errorDiv = document.querySelector('.error-message');
-            
-            loadingDiv.style.display = 'block';
-            resultDiv.style.display = 'none';
-            errorDiv.style.display = 'none';
-
-            const metrics = {
-                metric_a: parseInt(document.getElementById('metric_a').value),
-                metric_b: parseInt(document.getElementById('metric_b').value),
-                metric_c: parseInt(document.getElementById('metric_c').value)
-            };
-
-            // Validate inputs
-            if (Object.values(metrics).some(score => isNaN(score) || score < 0 || score > 100)) {
-                errorDiv.textContent = 'All scores must be between 0 and 100';
-                errorDiv.style.display = 'block';
-                loadingDiv.style.display = 'none';
-                return;
+        const surveyMetrics = {
+            technical_proficiency: {
+                name: "Technical Proficiency",
+                weight: 0.3,
+                factors: {
+                    llm_familiarity: 0.4,
+                    llm_experience: 0.3,
+                    cross_check_frequency: 0.3
+                }
+            },
+            trust_level: {
+                name: "Trust Level",
+                weight: 0.35,
+                factors: {
+                    info_characteristics: 0.4,
+                    cross_check_frequency: 0.3,
+                    llm_familiarity: 0.3
+                }
+            },
+            interaction_style: {
+                name: "Interaction Style",
+                weight: 0.35,
+                factors: {
+                    info_characteristics: 0.5,
+                    llm_experience: 0.5
+                }
             }
+        };
+
+        function processSurvey() {
+            debugLogger.log('Processing survey submission', 'info');
+            loader.show();
 
             try {
-                const response = await fetch('http://localhost:5000/api/process-survey', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(metrics)
-                });
-
-                const data = await response.json();
-                
-                if (data.success) {
-                    let resultHTML = '';
-                    
-                    if (data.presets.length > 0) {
-                        resultHTML = `
-                            <h3>Your Matched Chatbot Presets:</h3>
-                            ${data.presets.map(preset => `
-                                <div class="preset-card">
-                                    <h4>${preset.preset}</h4>
-                                    <p>${preset.description}</p>
-                                    <p>Your score: ${preset.score} (Threshold: ${preset.threshold})</p>
-                                </div>
-                            `).join('')}
-                        `;
-                    } else {
-                        resultHTML = `
-                            <div class="preset-card">
-                                <h4>No Matches Found</h4>
-                                <p>Your scores did not meet any preset thresholds. Consider adjusting your responses.</p>
-                            </div>
-                        `;
-                    }
-                    
-                    resultDiv.innerHTML = resultHTML;
-                    resultDiv.style.display = 'block';
-                } else {
-                    throw new Error(data.error || 'Failed to process survey');
-                }
+                const formData = gatherFormData();
+                const metrics = calculateMetrics(formData);
+                displayResults(metrics);
+                updateAnalytics('survey_completion');
+                notifications.show('Survey processed successfully', 'success');
             } catch (error) {
-                console.error('Error:', error);
-                errorDiv.textContent = 'An error occurred while processing your survey. Please try again.';
-                errorDiv.style.display = 'block';
+                debugLogger.log(`Survey processing error: ${error.message}`, 'error');
+                notifications.show('Error processing survey', 'error');
             } finally {
-                loadingDiv.style.display = 'none';
+                loader.hide();
             }
         }
 
@@ -392,6 +519,135 @@
         if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
             document.body.classList.add('dark-mode');
             document.querySelector('.theme-toggle').innerHTML = '&#9790;&#xFE0F;';
+        }
+
+        // Add these utility objects at the start of your script section
+        const debugLogger = {
+            logs: [],
+            maxLogs: 100,
+            
+            log: function(message, type = 'info') {
+                const timestamp = new Date().toISOString();
+                const logEntry = { timestamp, message, type };
+                this.logs.push(logEntry);
+                if (this.logs.length > this.maxLogs) this.logs.shift();
+                this.updateDebugConsole();
+                console.log(`[${type.toUpperCase()}] ${message}`);
+            },
+            
+            updateDebugConsole: function() {
+                const debugConsole = document.getElementById('debugLogs');
+                if (debugConsole) {
+                    debugConsole.innerHTML = this.logs
+                        .map(log => `<div>[${log.timestamp}] ${log.type.toUpperCase()}: ${log.message}</div>`)
+                        .join('');
+                    debugConsole.scrollTop = debugConsole.scrollHeight;
+                }
+            }
+        };
+
+        const notifications = {
+            show: function(message, type = 'info', duration = 3000) {
+                const notification = document.getElementById('notification');
+                notification.textContent = message;
+                notification.style.display = 'block';
+                setTimeout(() => notification.style.display = 'none', duration);
+            }
+        };
+
+        function gatherFormData() {
+            const form = document.getElementById('llm-survey-form');
+            const formData = new FormData(form);
+            const data = {};
+
+            // Process checkboxes
+            const checkboxGroups = form.querySelectorAll('input[type="checkbox"]');
+            checkboxGroups.forEach(checkbox => {
+                if (!data[checkbox.name]) {
+                    data[checkbox.name] = [];
+                }
+                if (checkbox.checked) {
+                    data[checkbox.name].push(checkbox.value);
+                }
+            });
+
+            // Process radio buttons and other inputs
+            formData.forEach((value, key) => {
+                if (!Array.isArray(data[key])) {
+                    data[key] = value;
+                }
+            });
+
+            return data;
+        }
+
+        function calculateMetrics(formData) {
+            const metrics = {};
+            metrics.technical_proficiency = calculateTechnicalProficiency(formData);
+            metrics.trust_level = calculateTrustLevel(formData);
+            metrics.interaction_style = calculateInteractionStyle(formData);
+            return metrics;
+        }
+
+        function calculateTechnicalProficiency(formData) {
+            const factors = surveyMetrics.technical_proficiency.factors;
+            let score = 0;
+
+            if (formData.llm_familiarity) {
+                score += (parseInt(formData.llm_familiarity) / 5) * factors.llm_familiarity;
+            }
+
+            if (formData.llm_experience) {
+                score += (formData.llm_experience === 'yes' ? 1 : 0) * factors.llm_experience;
+            }
+
+            if (formData.cross_check_frequency) {
+                score += (parseInt(formData.cross_check_frequency) / 5) * factors.cross_check_frequency;
+            }
+
+            return score * 100;
+        }
+
+        function calculateTrustLevel(formData) {
+            const factors = surveyMetrics.trust_level.factors;
+            let score = 0;
+
+            if (formData.info_characteristics) {
+                const trustIndicators = ['accuracy', 'objectivity', 'authority'];
+                const trustScore = formData.info_characteristics.filter(char => 
+                    trustIndicators.includes(char)
+                ).length / trustIndicators.length;
+                score += trustScore * factors.info_characteristics;
+            }
+
+            if (formData.cross_check_frequency) {
+                score += (parseInt(formData.cross_check_frequency) / 5) * factors.cross_check_frequency;
+            }
+
+            if (formData.llm_familiarity) {
+                score += (parseInt(formData.llm_familiarity) / 5) * factors.llm_familiarity;
+            }
+
+            return score * 100;
+        }
+
+        function calculateInteractionStyle(formData) {
+            const factors = surveyMetrics.interaction_style.factors;
+            let score = 0;
+
+            if (formData.info_characteristics) {
+                const creativeIndicators = ['creativity', 'understanding'];
+                const creativeScore = formData.info_characteristics.filter(char => 
+                    creativeIndicators.includes(char)
+                ).length / creativeIndicators.length;
+                score += creativeScore * factors.info_characteristics;
+            }
+
+            if (formData.llm_experience) {
+                score += (formData.llm_experience === 'yes' ? 1 : 0) * factors.llm_experience;
+            }
+
+            return score * 100;
         }
     </script>
 </body>
