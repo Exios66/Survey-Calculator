@@ -136,6 +136,8 @@
     <nav>
         <button onclick="openTab('landing')">Landing Page</button>
         <button onclick="openTab('algorithm')">Python Algorithm</button>
+        <button onclick="openTab('documentation')">README & Documentation</button>
+        <button onclick="openTab('survey')">Survey Integration</button>
     </nav>
 
     <div id="landing" class="tab-content active">
@@ -147,6 +149,47 @@
         <h2>Python Algorithm Page</h2>
         <p>This page will contain the explanation of the Python algorithm and how it works.</p>
         <p>You can also provide input fields and execute your Python script here if integrated with the backend.</p>
+    </div>
+
+    <div id="documentation" class="tab-content">
+        <h2>README & Full Documentation</h2>
+        <p>This page contains the full README file and comprehensive documentation to guide users through the setup, features, and functionality of the project.</p>
+        <h3>Getting Started</h3>
+        <p>To get started, clone the repository and follow these steps:</p>
+        <pre>
+            <code>
+                git clone https://github.com/your-repository/project.git
+                cd project
+                python setup.py install
+            </code>
+        </pre>
+        <h3>Features</h3>
+        <ul>
+            <li>Feature 1: Detailed user surveys for metric collection.</li>
+            <li>Feature 2: Dynamic chatbot personality selection.</li>
+            <li>Feature 3: Integrated dark/light theme toggle for user interface customization.</li>
+        </ul>
+        <h3>Instructions</h3>
+        <p>Follow the instructions in the repository to configure the environment. Refer to the Python Algorithm Page for more specific examples on algorithm usage.</p>
+    </div>
+
+    <div id="survey" class="tab-content">
+        <h2>User Survey for Chatbot Preset Selection</h2>
+        <p>Please input your scores for each metric below (0-100):</p>
+        <form id="survey-form">
+            <label for="metric_a">Metric A (Supportive and Empathetic):</label>
+            <input type="number" id="metric_a" name="metric_a" min="0" max="100" required><br><br>
+
+            <label for="metric_b">Metric B (Direct and Analytical):</label>
+            <input type="number" id="metric_b" name="metric_b" min="0" max="100" required><br><br>
+
+            <label for="metric_c">Metric C (Playful and Casual):</label>
+            <input type="number" id="metric_c" name="metric_c" min="0" max="100" required><br><br>
+
+            <button type="button" onclick="processSurvey()">Submit Survey</button>
+        </form>
+
+        <div id="survey-result" style="margin-top: 20px;"></div>
     </div>
 
     <script>
@@ -170,6 +213,38 @@
                 themeToggleBtn.innerHTML = '&#9790;&#xFE0F;'; // Moon icon for dark mode
             } else {
                 themeToggleBtn.innerHTML = '&#9728;&#xFE0F;'; // Sun icon for light mode
+            }
+        }
+
+        // Function to process the survey form and determine chatbot presets
+        function processSurvey() {
+            const metricA = parseInt(document.getElementById('metric_a').value);
+            const metricB = parseInt(document.getElementById('metric_b').value);
+            const metricC = parseInt(document.getElementById('metric_c').value);
+
+            const surveyPresets = {
+                "metric_a": {"threshold": 70, "preset": "Supportive and Empathetic"},
+                "metric_b": {"threshold": 50, "preset": "Direct and Analytical"},
+                "metric_c": {"threshold": 30, "preset": "Playful and Casual"},
+            };
+
+            let chatbotPresets = [];
+
+            if (metricA >= surveyPresets.metric_a.threshold) {
+                chatbotPresets.push(surveyPresets.metric_a.preset);
+            }
+            if (metricB >= surveyPresets.metric_b.threshold) {
+                chatbotPresets.push(surveyPresets.metric_b.preset);
+            }
+            if (metricC >= surveyPresets.metric_c.threshold) {
+                chatbotPresets.push(surveyPresets.metric_c.preset);
+            }
+
+            const resultDiv = document.getElementById('survey-result');
+            if (chatbotPresets.length > 0) {
+                resultDiv.innerHTML = `<h3>Based on your survey metrics, the following chatbot preset(s) apply to you:</h3><ul>${chatbotPresets.map(preset => `<li>${preset}</li>`).join('')}</ul>`;
+            } else {
+                resultDiv.innerHTML = "<h3>No specific preset matched your survey results.</h3>";
             }
         }
     </script>
