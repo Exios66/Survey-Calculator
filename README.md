@@ -1,59 +1,88 @@
-# Survey-Calculator
-Python Survey Calculator -- Introductory Survey to Chatbot Presets.
+# Survey Calculator
 
-Here is a comprehensive README file for the Survey-Calculator repository based on the gathered information:
-
-# Survey-Calculator
-
-Python Survey Calculator -- Introductory Survey to Chatbot Presets.
+A web application that helps determine the most suitable chatbot interaction style based on user preferences through a survey interface.
 
 ## Overview
 
-Survey-Calculator is a Python-based project designed to calculate and analyze survey data. This project serves as an introductory survey to chatbot presets, providing insights into user preferences and feedback.
+The Survey Calculator is a full-stack web application that allows users to:
+- Take a survey rating their preferences for different chatbot interaction styles
+- Get personalized recommendations for chatbot presets based on their scores
+- View detailed documentation about the different preset options
+- Toggle between light and dark themes
 
 ## Features
 
-- **Survey Data Calculation**: Efficiently processes and calculates survey data.
-- **Data Analysis**: Provides detailed analysis and insights from the survey data.
-- **User-Friendly Interface**: Easy to use and navigate.
+### Frontend (index.html)
+- Clean, modern UI built with HTML, CSS and vanilla JavaScript
+- Responsive design that works on mobile and desktop
+- Interactive survey form with real-time validation
+- Loading states and error handling
+- Dark/light theme toggle with CSS variables for consistent theming
+- Tab navigation between survey and documentation
+- Animated transitions and hover effects
+- Custom Google Fonts integration (Roboto)
+- Accessibility features including proper ARIA labels
+- Error and success message handling
 
-## Installation
+### Backend (app.py & evaluator.py)
+- Flask REST API endpoint (/api/process-survey) for handling survey submissions
+- CORS enabled for cross-origin requests
+- Comprehensive error handling and logging
+- Survey evaluation logic with configurable thresholds
+- Score validation (0-100 range)
+- Detailed logging of all operations with both file and console output
+- Type hints and documentation for better code maintainability
 
-To install and set up the Survey-Calculator, follow these steps:
+### Chatbot Presets
+Three distinct interaction styles are evaluated:
 
-1. **Clone the repository**:
-    ```bash
-    git clone https://github.com/Exios66/Survey-Calculator.git
-    cd Survey-Calculator
-    ```
+1. **Supportive and Empathetic**
+   - Threshold: 70
+   - Focuses on emotional support and understanding
+   - Ideal for users seeking compassionate interaction
 
-2. **Create and activate a virtual environment**:
+2. **Direct and Analytical**
+   - Threshold: 50
+   - Emphasizes logical problem-solving
+   - Best for users preferring straightforward communication
+
+3. **Playful and Casual**
+   - Threshold: 30
+   - Maintains a light, informal tone
+   - Suitable for casual conversations and engagement
+
+## Setup
+
+1. **Create and activate a virtual environment**:
     ```bash
     python3 -m venv venv
-    source venv/bin/activate
+    source venv/bin/activate  # On Windows: venv\Scripts\activate
     ```
 
-3. **Install the required dependencies**:
+2. **Install the required dependencies**:
     ```bash
     pip install -r requirements.txt
     ```
 
 ## Usage
 
-To use the Survey-Calculator, follow these steps:
-
-1. **Run the main script**:
+1. **Start the Flask server**:
     ```bash
-    python main.py
+    python app.py
     ```
 
-2. **Follow the on-screen instructions** to input survey data and obtain results.
+2. **Open index.html in your browser** to access the survey interface
+
+3. **Complete the survey** by rating your preferences for different interaction styles
+
+4. **View your results** to see your recommended chatbot preset
 
 ## Contributing
 
 We welcome contributions from the community. To contribute:
 
-1. **Fork the repository**.
+1. **Fork the repository**
+
 2. **Create a new branch** for your feature or bugfix:
     ```bash
     git checkout -b feature-name
@@ -69,7 +98,7 @@ We welcome contributions from the community. To contribute:
     git push origin feature-name
     ```
 
-5. **Open a pull request** and describe your changes.
+5. **Open a pull request** and describe your changes
 
 ## License
 
