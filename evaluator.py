@@ -1,77 +1,165 @@
 import json
+import logging
+import sys
+from typing import Dict, List, Optional
+
+# Configure logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('survey_calculator.log'),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+logger = logging.getLogger(__name__)
 
 # Define the dictionary containing survey metrics and corresponding chatbot presets
-# Each metric has a threshold value, and if the user's score meets or exceeds this threshold, the corresponding preset is selected
+# Each metric has a threshold value, and if the user's score meets or exceeds this threshold, 
+# the corresponding preset is selected
 survey_presets = {
-    "metric_a": {"threshold": 70, "preset": "Supportive and Empathetic"},
-    "metric_b": {"threshold": 50, "preset": "Direct and Analytical"},
-    "metric_c": {"threshold": 30, "preset": "Playful and Casual"},
+    "metric_a": {
+        "threshold": 70, 
+        "preset": "Supportive and Empathetic",
+        "description": "Focuses on emotional support and understanding"
+    },
+    "metric_b": {
+        "threshold": 50, 
+        "preset": "Direct and Analytical",
+        "description": "Emphasizes logical problem-solving and clear communication"
+    },
+    "metric_c": {
+        "threshold": 30, 
+        "preset": "Playful and Casual",
+        "description": "Maintains a light, informal tone in interactions"
+    },
 }
 
-# Function to input introductory survey metrics from user
-def get_user_metrics():
-    print("Please input your scores for each metric below:")
+def validate_score(score: int) -> bool:
+    """
+    Validate if the score is within acceptable range.
+    
+    Args:
+        score (int): The score to validate
+        
+    Returns:
+        bool: True if valid, False otherwise
+    """
+    return 0 <= score <= 100
+
+def get_user_metrics() -> Dict[str, int]:
+    """
+    Collect and validate user input for survey metrics.
+    
+    Returns:
+        Dict[str, int]: Dictionary mapping metric names to user scores
+    """
+    logger.info("Starting user metric collection...")
     metrics = {}  # Dictionary to store user metrics
     
     # Loop through each metric defined in survey_presets
     for metric in survey_presets.keys():
-        while True:
+        attempts = 0
+        max_attempts = 3
+        
+        while attempts < max_attempts:
             try:
-                print(f"Processing input for {metric}...")  # Debug log to indicate current metric being processed
-                score = int(input(f"Enter your score for {metric} (0-100): "))  # Get user input for the metric score
+                logger.debug(f"Processing input for {metric}...")
+                score = int(input(f"Enter your score for {metric} (0-100): "))
                 
-                # Ensure the input score is within the valid range (0-100)
-                if score < 0 or score > 100:
+                if not validate_score(score):
                     raise ValueError("Score must be between 0 and 100.")
                 
-                # Store the valid score in the metrics dictionary
                 metrics[metric] = score
-                print(f"Recorded score for {metric}: {score}")  # Debug log to confirm the recorded score
-                break  # Exit the loop if input is valid
-            
-            # Handle invalid input by prompting the user to enter the score again
+                logger.info(f"Successfully recorded score for {metric}: {score}")
+                break
+                
             except ValueError as e:
-                print(f"Invalid input: {e}. Please try again.")
+                attempts += 1
+                remaining = max_attempts - attempts
+                logger.warning(f"Invalid input for {metric}: {str(e)}")
+                if remaining > 0:
+                    print(f"Invalid input: {e}. {remaining} attempts remaining.")
+                else:
+                    logger.error(f"Max attempts reached for {metric}, defaulting to 0")
+                    metrics[metric] = 0
+                    print(f"Max attempts reached. Setting {metric} score to 0.")
     
-    print(f"Final user metrics: {metrics}")  # Debug log to display all collected metrics
-    return metrics  # Return the collected metrics
+    logger.info(f"Completed metric collection: {metrics}")
+    return metrics
 
-# Function to determine the appropriate chatbot preset based on user metrics
-def determine_chatbot_preset(user_metrics):
-    print("Determining chatbot preset based on user metrics...")  # Debug log to indicate start of preset determination
-    chatbot_preset = []  # List to store selected chatbot presets
+def determine_chatbot_preset(user_metrics: Dict[str, int]) -> List[Dict[str, str]]:
+    """
+    Determine appropriate chatbot presets based on user metrics.
     
-    # Loop through each user metric to determine if it meets the threshold for a preset
-    for metric, value in user_metrics.items():
-        print(f"Evaluating {metric} with value {value} against threshold {survey_presets[metric]['threshold']}...")  # Debug log for evaluation
+    Args:
+        user_metrics (Dict[str, int]): Dictionary of user metric scores
         
-        # If the user's score meets or exceeds the threshold, add the corresponding preset to the list
-        if value >= survey_presets[metric]['threshold']:
-            chatbot_preset.append(survey_presets[metric]['preset'])
-            print(f"Preset '{survey_presets[metric]['preset']}' added for {metric}")  # Debug log to confirm preset addition
+    Returns:
+        List[Dict[str, str]]: List of selected preset configurations
+    """
+    logger.info("Starting chatbot preset determination...")
+    chatbot_presets = []
     
-    print(f"Determined chatbot presets: {chatbot_preset}")  # Debug log to display the determined presets
-    return chatbot_preset  # Return the list of selected presets
+    try:
+        for metric, value in user_metrics.items():
+            threshold = survey_presets[metric]['threshold']
+            logger.debug(f"Evaluating {metric}: score={value}, threshold={threshold}")
+            
+            if value >= threshold:
+                preset_config = {
+                    'preset': survey_presets[metric]['preset'],
+                    'description': survey_presets[metric]['description'],
+                    'score': value,
+                    'threshold': threshold
+                }
+                chatbot_presets.append(preset_config)
+                logger.info(f"Added preset configuration: {preset_config}")
+    
+    except KeyError as e:
+        logger.error(f"Error accessing preset configuration: {str(e)}")
+        raise
+        
+    logger.info(f"Completed preset determination. Selected {len(chatbot_presets)} presets")
+    return chatbot_presets
 
-# Main function to orchestrate the flow of the program
-def main():
-    print("Starting main function...")  # Debug log to indicate the start of the main function
+def main() -> None:
+    """
+    Main function to orchestrate the survey calculation process.
+    """
+    logger.info("Starting survey calculator application...")
     
-    # Get user metrics through survey input
-    user_metrics = get_user_metrics()
-    
-    # Determine the chatbot presets based on the collected user metrics
-    chatbot_presets = determine_chatbot_preset(user_metrics)
-    
-    # Output the determined presets to the user
-    if chatbot_presets:
-        print("\nBased on your survey metrics, the following chatbot preset(s) apply to you:")
-        for preset in chatbot_presets:
-            print(f"- {preset}")
-    else:
-        print("\nNo specific preset matched your survey results.")
-    
-    print("Main function completed.")  # Debug log to indicate the end of the main function
+    try:
+        # Get user metrics through survey input
+        user_metrics = get_user_metrics()
+        
+        # Determine the chatbot presets based on the collected user metrics
+        chatbot_presets = determine_chatbot_preset(user_metrics)
+        
+        # Output the determined presets to the user
+        if chatbot_presets:
+            print("\nBased on your survey metrics, the following chatbot preset(s) apply to you:")
+            for preset in chatbot_presets:
+                print(f"\n- {preset['preset']}")
+                print(f"  Description: {preset['description']}")
+                print(f"  Your score: {preset['score']} (Threshold: {preset['threshold']})")
+        else:
+            logger.warning("No presets matched the user's metrics")
+            print("\nNo specific preset matched your survey results.")
+        
+        # Save results to file
+        with open('survey_results.json', 'w') as f:
+            json.dump({
+                'user_metrics': user_metrics,
+                'selected_presets': chatbot_presets
+            }, f, indent=4)
+            logger.info("Survey results saved to survey_results.json")
+            
+    except Exception as e:
+        logger.error(f"An unexpected error occurred: {str(e)}")
+        print("An error occurred while processing your survey. Please try again.")
+        
+    logger.info("Survey calculator application completed.")
 
 # Entry point for the script
 if __name__ == "__main__":
