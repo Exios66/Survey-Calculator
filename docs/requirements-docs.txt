@@ -1,3 +1,3 @@
 sphinx
 sphinx-rtd-theme
-# other documentation-related packages
+myst-parser
