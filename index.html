@@ -450,6 +450,8 @@
 
     <button class="debug-toggle" onclick="toggleDebugConsole()">🐛</button>
 
+    <div class="loading-spinner" id="loadingSpinner"></div>
+
     <script>
         function openTab(tabName) {
             const tabs = document.querySelectorAll('.tab-content');
@@ -648,6 +650,86 @@
             }
 
             return score * 100;
+        }
+
+        function displayResults(metrics) {
+            const resultsDiv = document.getElementById('survey-results');
+            resultsDiv.innerHTML = '';
+
+            // Create metric cards
+            Object.entries(metrics).forEach(([key, value]) => {
+                const card = document.createElement('div');
+                card.className = 'metric-card';
+                card.innerHTML = `
+                    <h3>${surveyMetrics[key].name}</h3>
+                    <p>${value.toFixed(1)}%</p>
+                `;
+                resultsDiv.appendChild(card);
+            });
+
+            // Update charts
+            updateMetricsChart(metrics);
+        }
+
+        function updateMetricsChart(metrics) {
+            const ctx = document.getElementById('metricsChart');
+            
+            if (!ctx) {
+                debugLogger.log('Metrics chart canvas not found', 'error');
+                return;
+            }
+            
+            if (window.metricsChart) {
+                window.metricsChart.destroy();
+            }
+            
+            window.metricsChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: Object.keys(metrics).map(key => surveyMetrics[key].name),
+                    datasets: [{
+                        label: 'User Metrics',
+                        data: Object.values(metrics),
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', () => {
+            debugLogger.log('Survey system initialized', 'info');
+        });
+
+        const loader = {
+            show: function() {
+                const loadingSpinner = document.getElementById('loadingSpinner');
+                if (loadingSpinner) {
+                    loadingSpinner.style.display = 'block';
+                }
+            },
+            
+            hide: function() {
+                const loadingSpinner = document.getElementById('loadingSpinner');
+                if (loadingSpinner) {
+                    loadingSpinner.style.display = 'none';
+                }
+            }
+        };
+
+        function updateAnalytics(eventType) {
+            debugLogger.log(`Analytics event tracked: ${eventType}`, 'info');
+            // Here you could add actual analytics tracking code
         }
     </script>
 </body>
