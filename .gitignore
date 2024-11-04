@@ -17,12 +17,7 @@ _site/
 # Details at https://github.com/github/pages-gem/issues/768
 Gemfile.lock
 
-# Python virtual environment
-venv/
-env/
-ENV/
-.env/
-.venv/
+
 
 # Python bytecode
 __pycache__/
